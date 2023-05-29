@@ -1,5 +1,11 @@
 import streamlit as st
 import pyrebase
+from PIL import Image
+
+
+login_icon = Image.open("assets/login.png")
+register_icon = Image.open("assets/register.png")
+logout_icon = Image.open("assets/logout.png")
 
 # Firebase configuration
 firebase_config = {
@@ -13,10 +19,10 @@ firebase_config = {
   'databaseURL': None
 }
 
+
 # Initialize Firebase
 firebase = pyrebase.initialize_app(firebase_config)
 auth = firebase.auth()
-
 
 hide_streamlit_style = """
             <style>
@@ -26,7 +32,21 @@ hide_streamlit_style = """
             """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
-def login():
+# Create session state
+if 'user' not in st.session_state:
+    st.session_state.user = None
+
+def home():
+    if st.session_state.user == None:
+        st.title("Home")
+        st.write("# Welcome to the Home Page")
+        st.write("Please log in or register to continue")
+    else:
+        st.title("Dashboard")
+        st.write("# Welcome to the Home Page")
+        st.write("You are logged in")
+
+def login(pages):
     st.title("Login")
 
     email = st.text_input("Email")
@@ -35,7 +55,9 @@ def login():
     if st.button("Login"):
         try:
             user = auth.sign_in_with_email_and_password(email, password)
-            st.success(f"Logged in as {user['email']}")
+            st.session_state.user = user
+            st.success("Login successful")
+            st.experimental_rerun()
         except Exception as e:
             st.error("Invalid email or password")
 
@@ -56,14 +78,29 @@ def register():
             except Exception as e:
                 st.error("Registration failed")
 
+
+def logout():
+    st.session_state.user = None
+    st.experimental_rerun()
+
 # Main function
 def main():
-    st.sidebar.title("Authentication")
-    choice = st.sidebar.radio("Select Option", ["Login", "Register"])
+    side = st.sidebar.title("Navigation")
+    if st.session_state.user != None:
+        pages = ["Dashboard", "Sensor 1", "Sensor 2", "Sensor 3", "Sensor 4"]
+        st.sidebar.selectbox("Go to", pages)
+        choice = 'Dashboard'
+    else:
+        pages = ["Dashboard"]
+        choice = None
+    auth_pages = ["Login", "Register", "logout"]
+    auth_choice = st.sidebar.radio("Go to", auth_pages)
 
-    if choice == "Login":
-        login()
-    elif choice == "Register":
+    if choice == "Dashboard" and st.session_state.user != None:
+        home()
+    elif auth_choice == "Login":
+        login(pages)
+    elif auth_choice == "Register":
         register()
 
 if __name__ == "__main__":

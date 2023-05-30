@@ -5,6 +5,7 @@ import plotly.graph_objects as go
 import numpy as np
 from plotly.subplots import make_subplots
 
+
 # Generate fake data
 x = np.arange(0, 10, 0.1)
 spo2_data = np.random.randint(90, 100, size=len(x))
@@ -35,14 +36,14 @@ orientation_median = np.median(orientation_data)
 
 # Firebase configuration
 firebase_config = {
-  'apiKey': "AIzaSyBsXCCqwqgPe9xpq02yTgBg6Q2NQ84j5M8",
-  'authDomain': "stats-ed9ac.firebaseapp.com",
-  'projectId': "stats-ed9ac",
-  'storageBucket': "stats-ed9ac.appspot.com",
-  'messagingSenderId': "801682877749",
-  'appId': "1:801682877749:web:7356a7790744adbc0cf07c",
-  'measurementId': "G-8RE2DQ397C",
-  'databaseURL': None
+    "apiKey": "AIzaSyBsXCCqwqgPe9xpq02yTgBg6Q2NQ84j5M8",
+    "authDomain": "stats-ed9ac.firebaseapp.com",
+    "projectId": "stats-ed9ac",
+    "storageBucket": "stats-ed9ac.appspot.com",
+    "messagingSenderId": "801682877749",
+    "appId": "1:801682877749:web:7356a7790744adbc0cf07c",
+    "measurementId": "G-8RE2DQ397C",
+    "databaseURL": None,
 }
 
 # Initialize Firebase
@@ -54,12 +55,13 @@ hide_streamlit_style = """
             footer {visibility: hidden;}
             </style>
             """
-            #MainMenu {visibility: hidden;}
+# MainMenu {visibility: hidden;}
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
 # Create session state
-if 'user' not in st.session_state:
+if "user" not in st.session_state:
     st.session_state.user = None
+
 
 def home():
     if st.session_state.user is None:
@@ -68,22 +70,37 @@ def home():
         st.write("Please log in or register to continue")
     else:
         st.title("Dashboard")
-        st.markdown("### Welcome back, " + st.session_state.user['email'] + "!")
-        
+        st.markdown("### Welcome back, " + st.session_state.user["email"] + "!")
+
         # Create subplot grid for charts
-        fig = make_subplots(rows=3, cols=2, subplot_titles=[
-            "SpO2", "Fréquence cardiaque",
-            "Intervalles R-R", "Accélération",
-            "Gyroscopie", "Orientation"
-        ])
+        fig = make_subplots(
+            rows=3,
+            cols=2,
+            subplot_titles=[
+                "SpO2",
+                "Fréquence cardiaque",
+                "Intervalles R-R",
+                "Accélération",
+                "Gyroscopie",
+                "Orientation",
+            ],
+        )
 
         # Add charts to the subplot grid
-        fig.add_trace(go.Scatter(x=x, y=spo2_data, name='SpO2'), row=1, col=1)
-        fig.add_trace(go.Scatter(x=x, y=heart_rate_data, name='Fréquence cardiaque'), row=1, col=2)
-        fig.add_trace(go.Scatter(x=x, y=rr_interval_data, name='Intervalles R-R'), row=2, col=1)
-        fig.add_trace(go.Scatter(x=x, y=acceleration_data, name='Accélération'), row=2, col=2)
-        fig.add_trace(go.Scatter(x=x, y=gyro_data, name='Gyroscopie'), row=3, col=1)
-        fig.add_trace(go.Scatter(x=x, y=orientation_data, name='Orientation'), row=3, col=2)
+        fig.add_trace(go.Scatter(x=x, y=spo2_data, name="SpO2"), row=1, col=1)
+        fig.add_trace(
+            go.Scatter(x=x, y=heart_rate_data, name="Fréquence cardiaque"), row=1, col=2
+        )
+        fig.add_trace(
+            go.Scatter(x=x, y=rr_interval_data, name="Intervalles R-R"), row=2, col=1
+        )
+        fig.add_trace(
+            go.Scatter(x=x, y=acceleration_data, name="Accélération"), row=2, col=2
+        )
+        fig.add_trace(go.Scatter(x=x, y=gyro_data, name="Gyroscopie"), row=3, col=1)
+        fig.add_trace(
+            go.Scatter(x=x, y=orientation_data, name="Orientation"), row=3, col=2
+        )
 
         # Update subplot layout
         fig.update_layout(height=800, width=800, title_text="Valeurs des capteurs")
@@ -107,6 +124,7 @@ def login(pages):
         except Exception as e:
             st.error("Invalid email or password")
 
+
 def register():
     st.title("Register")
 
@@ -124,17 +142,29 @@ def register():
             except Exception as e:
                 st.error("Registration failed")
 
+
 def logout():
     st.session_state.user = None
+
 
 # Main function
 def main():
     side = st.sidebar.title("Navigation")
     if st.session_state.user != None:
-        pages = ["Dashboard", "Sensor 1", "Sensor 2", "Sensor 3", "Sensor 4"]
-        st.sidebar.selectbox("Go to", pages)
-        choice = 'Dashboard'
+        pages = [
+            "Dashboard",
+            "SpO2",
+            "Fréquence cardiaque",
+            "Intervalles R-R",
+            "Accélération",
+            "Gyroscopie",
+            "Orientation",
+        ]
+        choice = st.sidebar.selectbox("Go to", pages)
         st.sidebar.button("Logout", on_click=logout)
+        if choice == "SpO2":
+            draw_spo2()
+
     else:
         pages = ["Dashboard"]
         choice = None
@@ -147,6 +177,7 @@ def main():
         login(pages)
     elif auth_choice == "Register":
         register()
+
 
 if __name__ == "__main__":
     main()

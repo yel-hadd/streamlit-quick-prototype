@@ -170,3 +170,14 @@ rr_interval_fig.show()
 acceleration_fig.show()
 gyro_fig.show()
 orientation_fig.show()
+
+
+# pages = [
+#    "Dashboard",
+#    "SpO2",
+#    "Fréquence cardiaque",
+#    "Intervalles R-R",
+#    "Accélération",
+#    "Gyroscopie",
+#    "Orientation",
+# ]

@@ -100,7 +100,6 @@ def ecg_chart():
 
     while True:
         update_chart()
-        print("Updating chart...")
 
         time.sleep(1)
 

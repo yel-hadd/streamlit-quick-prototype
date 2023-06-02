@@ -7,13 +7,6 @@ from ecg import ecg_chart
 from motion_sensor import motion_sensor
 
 
-hide_streamlit_style = """
-            <style>
-            footer {visibility: hidden;}
-            </style>
-            """
-# MainMenu {visibility: hidden;}
-st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
 # Create session state
 if "user" not in st.session_state:
@@ -81,21 +74,51 @@ def reset_password():
 
 # Main function
 def main():
-    # st.set_page_config(page_title="Simple App", page_icon="📈")
+    hide_streamlit_style = """
+                <style>
+                div[data-testid="stToolbar"] {
+                visibility: hidden;
+                height: 0%;
+                position: fixed;
+                }
+                div[data-testid="stDecoration"] {
+                visibility: hidden;
+                height: 0%;
+                position: fixed;
+                }
+                div[data-testid="stStatusWidget"] {
+                visibility: hidden;
+                height: 0%;
+                position: fixed;
+                }
+                #MainMenu {
+                visibility: hidden;
+                height: 0%;
+                }
+                header {
+                visibility: hidden;
+                height: 0%;
+                }
+                footer {
+                visibility: hidden;
+                height: 0%;
+                }
+                </style>
+                """
+    st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+    st.markdown("<style>#main { display: none; }</style>", unsafe_allow_html=True)
     if st.session_state.user != None:
-        side = st.sidebar.title("Navigation")
-        # choice = st.sidebar.selectbox("Go to", pages)
+        st.sidebar.title("Navigation")
         page_names_to_funcs = {
             "Accueil": dashboard,
-            "Fréquence cardiaque": heart_rate,
             "Capteur SpO2": spo2_level,
             "Capteur ECG": ecg_chart,
             "Capteur de mouvement": motion_sensor,
         }
 
         choice = st.sidebar.selectbox("Choose a demo", page_names_to_funcs.keys())
-        page_names_to_funcs[choice]()
         st.sidebar.button("Logout", on_click=logout)
+        page_names_to_funcs[choice]()
     else:
         side = st.sidebar.title("Authentification")
         choice = None
@@ -110,3 +133,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    

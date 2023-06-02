@@ -4,7 +4,7 @@ import time
 from datetime import datetime
 from firebase_utils import database
 
-def heart_rate():
+def ecg_chart():
     hide_streamlit_style = """
                 <style>
                 div[data-testid="stToolbar"] {
@@ -43,28 +43,28 @@ def heart_rate():
     fig = go.Figure()
 
     # Create an empty trace
-    trace = go.Scatter(x=[], y=[], mode='lines', name='Fréquence cardiaque')
+    trace = go.Scatter(x=[], y=[], mode='lines', name='Signal ECG')
 
     # Add the trace to the figure
     fig.add_trace(trace)
 
     # Set the layout
     fig.update_layout(
-        title='Fréquence cardiaque',
-        xaxis_title='Time',
-        yaxis_title='BPM',
+        title='Diagramme pour le capteur ECG',
+        xaxis_title='Timestamp',
+        yaxis_title='Amplitude du signal ECG (mV)',
         xaxis=dict(type='date', tickformat='%H:%M:%S'),
-        margin=dict(l=40, r=40, t=40, b=40),  # Adjust margin for better spacing
-        autosize=True,  # Enable autosizing of the plot
-        height=500,  # Set the initial height of the plot
-        template='plotly_white'  # Use a white theme for better clarity
+        margin=dict(l=40, r=40, t=40, b=40),
+        autosize=True,
+        height=500,
+        template='plotly_white'
     )
 
     # Create a Streamlit timer
     timer = st.empty()
 
     # Create a Streamlit plot
-    plot = st.plotly_chart(fig, use_container_width=True)  # Use container width for responsiveness
+    plot = st.plotly_chart(fig, use_container_width=True)
 
     # Keep track of the last timestamp fetched
     last_timestamp = 0
@@ -72,20 +72,20 @@ def heart_rate():
     def update_chart():
         nonlocal last_timestamp
 
-        # Retrieve heart rate data from the Firebase Realtime Database starting from the last timestamp
-        new_bpm_data = database.child("bpm").order_by_key().start_at(str(last_timestamp + 1)).get()
+        # Retrieve ECG data from the Firebase Realtime Database starting from the last timestamp
+        new_ecg_data = database.child("ecg").order_by_key().start_at(str(last_timestamp + 1)).get()
 
         # Check if there is new data
-        if new_bpm_data.each():
+        if new_ecg_data.each():
             x = []
             y = []
 
-            # Retrieve the timestamp and BPM values
-            for data_point in new_bpm_data.each():
+            # Retrieve the timestamp and ECG amplitude values
+            for data_point in new_ecg_data.each():
                 timestamp = int(data_point.key())
                 x.append(datetime.fromtimestamp(timestamp))
-                y.append(data_point.val()["bpm"])
-                last_timestamp = timestamp  # Update the last timestamp fetched
+                y.append(data_point.val()["ecg"])
+                last_timestamp = timestamp
 
             # Update the scatter trace with new data
             fig.data[0].x += tuple(x)
@@ -99,11 +99,10 @@ def heart_rate():
             timer.text(f"Dernière mise à jour : {last_updated}")
 
     while True:
-        try:
-            update_chart()
-        except KeyError:
-            pass
+        update_chart()
+        print("Updating chart...")
+
         time.sleep(1)
 
 if __name__ == "__main__":
-    heart_rate()
+    ecg_chart()

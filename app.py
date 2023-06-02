@@ -2,6 +2,9 @@ import streamlit as st
 from dashboard import dashboard
 from heart_rate import heart_rate
 from firebase_utils import database, auth, firebase
+from spo import spo2_level
+from ecg import ecg_chart
+from motion_sensor import motion_sensor
 
 
 hide_streamlit_style = """
@@ -18,16 +21,16 @@ if "user" not in st.session_state:
 
 
 def login():
-    st.title("Login")
+    st.title("Connexion")
 
     email = st.text_input("Email")
     password = st.text_input("Password", type="password")
 
-    if st.button("Login"):
+    if st.button("Connexion"):
         try:
             user = auth.sign_in_with_email_and_password(email, password)
             st.session_state.user = user
-            st.success("Login successful")
+            st.success("Connexion successful")
             st.experimental_rerun()
         except Exception as e:
             print(e)
@@ -85,6 +88,9 @@ def main():
         page_names_to_funcs = {
             "Accueil": dashboard,
             "Fréquence cardiaque": heart_rate,
+            "Capteur SpO2": spo2_level,
+            "Capteur ECG": ecg_chart,
+            "Capteur de mouvement": motion_sensor,
         }
 
         choice = st.sidebar.selectbox("Choose a demo", page_names_to_funcs.keys())

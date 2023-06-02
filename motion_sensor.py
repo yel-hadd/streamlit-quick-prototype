@@ -4,7 +4,7 @@ import time
 from datetime import datetime
 from firebase_utils import database
 
-def heart_rate():
+def motion_sensor():
     hide_streamlit_style = """
                 <style>
                 div[data-testid="stToolbar"] {
@@ -43,17 +43,18 @@ def heart_rate():
     fig = go.Figure()
 
     # Create an empty trace
-    trace = go.Scatter(x=[], y=[], mode='lines', name='Fréquence cardiaque')
+    trace = go.Scatter(x=[], y=[], mode='lines', name='État de mouvement')
 
     # Add the trace to the figure
     fig.add_trace(trace)
 
     # Set the layout
     fig.update_layout(
-        title='Fréquence cardiaque',
+        title='Capteur de mouvement',
         xaxis_title='Time',
-        yaxis_title='BPM',
+        yaxis_title='État de mouvement',
         xaxis=dict(type='date', tickformat='%H:%M:%S'),
+        yaxis=dict(range=[-0.1, 1.1], tickmode='linear'),
         margin=dict(l=40, r=40, t=40, b=40),  # Adjust margin for better spacing
         autosize=True,  # Enable autosizing of the plot
         height=500,  # Set the initial height of the plot
@@ -72,19 +73,19 @@ def heart_rate():
     def update_chart():
         nonlocal last_timestamp
 
-        # Retrieve heart rate data from the Firebase Realtime Database starting from the last timestamp
-        new_bpm_data = database.child("bpm").order_by_key().start_at(str(last_timestamp + 1)).get()
+        # Retrieve motion sensor data from the Firebase Realtime Database starting from the last timestamp
+        new_motion_data = database.child("mvm").order_by_key().start_at(str(last_timestamp + 1)).get()
 
         # Check if there is new data
-        if new_bpm_data.each():
+        if new_motion_data.each():
             x = []
             y = []
 
-            # Retrieve the timestamp and BPM values
-            for data_point in new_bpm_data.each():
+            # Retrieve the timestamp and motion state values
+            for data_point in new_motion_data.each():
                 timestamp = int(data_point.key())
                 x.append(datetime.fromtimestamp(timestamp))
-                y.append(data_point.val()["bpm"])
+                y.append(data_point.val()["mvm"])
                 last_timestamp = timestamp  # Update the last timestamp fetched
 
             # Update the scatter trace with new data
@@ -106,4 +107,4 @@ def heart_rate():
         time.sleep(1)
 
 if __name__ == "__main__":
-    heart_rate()
+    motion_sensor()

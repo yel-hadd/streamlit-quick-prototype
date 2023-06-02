@@ -31,11 +31,12 @@ def write_bpm():
     # Write the bpm value and timestamp to the database
     database.child("bpm").child(timestamp).set({
         "bpm": bpm,
+        "timestamp": timestamp
     })
 
 # Start a loop that writes a random bpm value and timestamp to the database every 1 minute
 while True:
-    time.sleep(1)
     write_bpm()
+    time.sleep(1)
 
 

@@ -4,6 +4,8 @@ from streamlit_option_menu import option_menu
 import plotly.graph_objects as go
 import numpy as np
 from plotly.subplots import make_subplots
+from datetime import datetime
+from time import sleep
 
 # Generate fake data
 x = np.arange(0, 10, 0.1)
@@ -35,18 +37,19 @@ orientation_median = np.median(orientation_data)
 
 # Firebase configuration
 firebase_config = {
-    "apiKey": "AIzaSyBsXCCqwqgPe9xpq02yTgBg6Q2NQ84j5M8",
-    "authDomain": "stats-ed9ac.firebaseapp.com",
-    "projectId": "stats-ed9ac",
-    "storageBucket": "stats-ed9ac.appspot.com",
-    "messagingSenderId": "801682877749",
-    "appId": "1:801682877749:web:7356a7790744adbc0cf07c",
-    "measurementId": "G-8RE2DQ397C",
-    "databaseURL": None,
+  "apiKey": "AIzaSyAdKv6pcJh-dlpRA44p_6ji6xwdOqB9rwg",
+  "authDomain": "naturekine.firebaseapp.com",
+  "databaseURL": "https://naturekine-default-rtdb.firebaseio.com",
+  "projectId": "naturekine",
+  "storageBucket": "naturekine.appspot.com",
+  "messagingSenderId": "666122354517",
+  "appId": "1:666122354517:web:b007a9b3bc6b2a166139dc",
+  "measurementId": "G-Q7KKP82VYP"
 }
 
 # Initialize Firebase
 firebase = pyrebase.initialize_app(firebase_config)
+database = firebase.database()
 auth = firebase.auth()
 
 hide_streamlit_style = """
@@ -126,6 +129,7 @@ def login():
             st.success("Login successful")
             st.experimental_rerun()
         except Exception as e:
+            print(e)
             st.error("Invalid email or password")
 
 
@@ -188,43 +192,46 @@ def spo2():
 
 def heart_rate():
     import streamlit as st
-    import numpy as np
     import plotly.graph_objects as go
+    import time
 
-    x = np.arange(0, 10, 0.1)
-    heart_rate_data = np.random.randint(60, 100, size=len(x))
-    heart_rate_mean = np.mean(heart_rate_data)
-    heart_rate_median = np.median(heart_rate_data)
     st.markdown("# Fréquence cardiaque")
     st.write("This is a plot of heart rate")
-    # Create heart rate chart
-    heart_rate_chart = go.Scatter(x=x, y=heart_rate_data, name="Fréquence cardiaque")
-    heart_rate_mean_line = go.Scatter(
-        x=x,
-        y=[heart_rate_mean] * len(x),
-        name="Mean",
-        mode="lines",
-        line=dict(dash="dash"),
-    )
-    heart_rate_median_line = go.Scatter(
-        x=x,
-        y=[heart_rate_median] * len(x),
-        name="Median",
-        mode="lines",
-        line=dict(dash="dash"),
-    )
-    heart_rate_layout = go.Layout(
-        title="Fréquence cardiaque",
-        xaxis=dict(title="Temps"),
-        yaxis=dict(title="Fréquence cardiaque (bpm)"),
-    )
-    heart_rate_fig = go.Figure(
-        data=[heart_rate_chart, heart_rate_mean_line, heart_rate_median_line],
-        layout=heart_rate_layout,
-    )
-    st.plotly_chart(heart_rate_fig)
-    st.button("Actualiser")
 
+    # Create a new figure for the heart rate chart
+    fig = go.Figure()
+
+    # Keep track of the last timestamp fetched
+    last_timestamp = 0
+
+    # Retrieve data from the database and update the chart
+    def update_chart():
+        nonlocal last_timestamp
+
+        # Retrieve new data from the database starting from the last timestamp
+        bpm_data = database.child("bpm").order_by_key().start_at(f"{last_timestamp}").get()
+
+        if bpm_data.each():
+            x = []
+            y = []
+            for data_point in bpm_data.each():
+                timestamp = int(data_point.key())
+                x.append(datetime.fromtimestamp(timestamp).strftime("%Y-%m-%d %H:%M:%S"))
+                y.append(data_point.val()["bpm"])
+                last_timestamp = timestamp  # Update the last timestamp fetched
+
+            fig.add_trace(go.Scatter(x=x, y=y, mode="lines", name="Fréquence cardiaque"))
+            st.plotly_chart(fig)
+        else:
+            st.write("No new data available")
+
+    # Call the update function initially
+    update_chart()
+
+    # Periodically update the chart with new data
+    while True:
+        time.sleep(1)  # Wait for 30 seconds
+        st.experimental_rerun()
 
 def rr_intervals():
     import streamlit as st

@@ -5,60 +5,70 @@ from datetime import datetime
 from firebase_utils import database
 
 def heart_rate():
-    st.markdown("# Fréquence cardiaque")
-    st.write("This is a plot of heart rate")
-
-    # Create a new figure for the heart rate chart
+    st.markdown("<style>#main { display: none; }</style>", unsafe_allow_html=True)
+    
+    # Initialize the figure
     fig = go.Figure()
 
-    # Retrieve initial data from the database
-    bpm_data = database.child("bpm").order_by_key().get()
-    x = []
-    y = []
-    for data_point in bpm_data.each():
-        timestamp = int(data_point.key())
-        x.append(datetime.fromtimestamp(timestamp))
-        y.append(data_point.val()["bpm"])
+    # Create an empty trace
+    trace = go.Scatter(x=[], y=[], mode='lines', name='Fréquence cardiaque')
 
-    # Create an initial scatter trace for heart rate data
-    fig.add_trace(go.Scatter(x=x, y=y, mode="lines", name="Fréquence cardiaque"))
+    # Add the trace to the figure
+    fig.add_trace(trace)
 
-    # Set the x-axis type to 'date'
-    fig.update_xaxes(type="date")
+    # Set the layout
+    fig.update_layout(
+        title='Fréquence cardiaque',
+        xaxis_title='Time',
+        yaxis_title='BPM',
+        xaxis=dict(type='date', tickformat='%H:%M:%S'),
+        margin=dict(l=40, r=40, t=40, b=40),  # Adjust margin for better spacing
+        autosize=True,  # Enable autosizing of the plot
+        height=500,  # Set the initial height of the plot
+        template='plotly_white'  # Use a white theme for better clarity
+    )
 
-    # Show the initial chart
-    chart_shown = False
+    # Create a Streamlit timer
+    timer = st.empty()
+
+    # Create a Streamlit plot
+    plot = st.plotly_chart(fig, use_container_width=True)  # Use container width for responsiveness
 
     # Keep track of the last timestamp fetched
-    last_timestamp = max([int(data_point.key()) for data_point in bpm_data.each()])
+    last_timestamp = 0
 
-    # Function to update the chart with new data
     def update_chart():
-        nonlocal last_timestamp, chart_shown
+        nonlocal last_timestamp
 
-        # Retrieve new data from the database starting from the last timestamp
+        # Retrieve heart rate data from the Firebase Realtime Database starting from the last timestamp
         new_bpm_data = database.child("bpm").order_by_key().start_at(str(last_timestamp + 1)).get()
 
+        # Check if there is new data
         if new_bpm_data.each():
-            new_x = []
-            new_y = []
+            x = []
+            y = []
+
+            # Retrieve the timestamp and BPM values
             for data_point in new_bpm_data.each():
                 timestamp = int(data_point.key())
-                new_x.append(datetime.fromtimestamp(timestamp))
-                new_y.append(data_point.val()["bpm"])
+                x.append(datetime.fromtimestamp(timestamp))
+                y.append(data_point.val()["bpm"])
                 last_timestamp = timestamp  # Update the last timestamp fetched
 
             # Update the scatter trace with new data
-            fig.add_trace(go.Scatter(x=new_x, y=new_y, mode="lines", name="Fréquence cardiaque"))
+            fig.data[0].x += tuple(x)
+            fig.data[0].y += tuple(y)
 
-            if not chart_shown:
-                # Show the updated chart only for the first time
-                st.plotly_chart(fig)
-                chart_shown = True
+            # Update the plot
+            plot.plotly_chart(fig)
 
-    # Call the update function initially
-    update_chart()
+            # Update the timer
+            last_updated = datetime.fromtimestamp(last_timestamp).strftime("%H:%M:%S")
+            timer.text(f"Last updated: {last_updated}")
 
+    while True:
+        update_chart()
+        time.sleep(1)
 
 if __name__ == "__main__":
     heart_rate()

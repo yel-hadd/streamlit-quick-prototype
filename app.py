@@ -5,56 +5,57 @@ from firebase_utils import database, auth, firebase
 from spo import spo2_level
 from ecg import ecg_chart
 from motion_sensor import motion_sensor
-
+from vue_generale import combined_charts
 
 
 # Create session state
 if "user" not in st.session_state:
     st.session_state.user = None
+if "page" not in st.session_state:
+    st.session_state.page = None
 
 
 def login():
     st.title("Connexion")
 
     email = st.text_input("Email")
-    password = st.text_input("Password", type="password")
+    password = st.text_input("Mot de passe", type="password")
 
     if st.button("Connexion"):
         try:
             user = auth.sign_in_with_email_and_password(email, password)
             st.session_state.user = user
-            st.success("Connexion successful")
+            st.success("Connexion réussie")
             st.experimental_rerun()
         except Exception as e:
-            print(e)
-            st.error("Invalid email or password")
+            st.error("Email ou mot de passe invalide")
 
 
 def register():
-    st.title("Register")
+    st.title("Inscription")
 
     email = st.text_input("Email")
-    password = st.text_input("Password", type="password")
-    confirm_password = st.text_input("Confirm Password", type="password")
+    password = st.text_input("Mot de passe", type="password")
+    confirm_password = st.text_input("Confirmer le mot de passe", type="password")
 
     if st.button("Register"):
         if password != confirm_password:
-            st.error("Passwords do not match")
+            st.error("Les mots de passe ne correspondent pas")
         else:
             try:
                 user = auth.create_user_with_email_and_password(email, password)
-                st.success("Registration successful. Please log in.")
+                st.success("Inscription réussie. Veuillez vous connecter.")
             except Exception as e:
-                st.error("Registration failed")
+                st.error("Échec de l'inscription")
 
 
 def logout():
     st.session_state.user = None
 
+
 def reset_password():
 
-    st.markdown("# Reset Password")
-    st.write("This is a form to reset password")
+    st.markdown("# Réinitialiser le mot de passe")
     form = st.form("Saisissez votre Email ici", True)
     email = form.text_input("Email")
     submitted = form.form_submit_button("Réinitialiser le mot de passe")
@@ -71,6 +72,7 @@ def reset_password():
                 email
             )
         )
+
 
 # Main function
 def main():
@@ -114,16 +116,18 @@ def main():
             "Capteur SpO2": spo2_level,
             "Capteur ECG": ecg_chart,
             "Capteur de mouvement": motion_sensor,
+            "Graphiques combinés": combined_charts,
         }
 
         choice = st.sidebar.selectbox("Choose a demo", page_names_to_funcs.keys())
-        st.sidebar.button("Logout", on_click=logout)
+        st.sidebar.button("Déconnexion", on_click=logout)
+        st.session_state.page = choice
         page_names_to_funcs[choice]()
     else:
         side = st.sidebar.title("Authentification")
         choice = None
         auth_pages = ["Connexion", "Inscription", "Réinitialisation du mot de passe"]
-        auth_choice = st.sidebar.radio("Authentification", auth_pages)
+        auth_choice = st.sidebar.radio("", auth_pages)
         if auth_choice == "Connexion":
             login()
         elif auth_choice == "Inscription":
@@ -131,6 +135,6 @@ def main():
         elif auth_choice == "Réinitialisation du mot de passe":
             reset_password()
 
+
 if __name__ == "__main__":
     main()
-    

@@ -97,7 +97,7 @@ def motion_sensor():
 
             # Update the timer
             last_updated = datetime.fromtimestamp(last_timestamp).strftime("%H:%M:%S")
-            timer.text(f"Dernière mise à jour : {last_updated}")
+            timer.text(f"Last updated: {last_updated}")
 
     while True:
         try:

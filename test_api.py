@@ -63,7 +63,7 @@ def write_every_minute():
         write_ecg(timestamp, var)
         var = random.randint(0, 1)
         write_mvm(timestamp, var)
-        time.sleep(60)
+        time.sleep(1)
 
 
 # Erase existing "bpm" data
@@ -73,7 +73,7 @@ database.child("ecg").remove()
 database.child("mvm").remove()
 
 # Write data starting from 10 hours in the past
-write_initial_data()
+#write_initial_data()
 
 # Start writing data every minute
 write_every_minute()

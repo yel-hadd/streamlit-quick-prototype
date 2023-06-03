@@ -51,7 +51,7 @@ def spo2_level():
     # Set the layout
     fig.update_layout(
         title='Niveau de SpO2',
-        xaxis_title='Time',
+        xaxis_title='Temps',
         yaxis_title='SpO2 (%)',
         xaxis=dict(type='date', tickformat='%H:%M:%S'),
         margin=dict(l=40, r=40, t=40, b=40),
